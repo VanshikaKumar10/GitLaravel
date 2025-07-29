@@ -24,7 +24,7 @@ jobs:
             echo " SSH access successful."
             cd /var/www/html
             git pull origin dev
-            docker build . -t wordpress:v11
-            sed -i 's|wordpress:v10|wordpress:v11|g' "docker-compose.yml"
+            docker build . -t laravel-ubuntu-app
+            sed -i 's|laravel-ubuntu-app|g' "docker-compose.yml"
             docker-compose down
             docker-compose up -d
