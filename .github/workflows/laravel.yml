@@ -32,7 +32,7 @@ jobs:
     # 5. Copy project files from GitHub runner to your server
     - name: Copy project files to server
       run: |
-        rsync -avz --exclude '.git' --exclude 'node_modules' ./ ubuntu@${{ secrets.SERVER_IP }}:/var/www/laravel
+        rsync -avz --exclude '.git' --exclude 'node_modules' ./ ubuntu@${{ secrets.SERVER_IP }}:/var/www/html
 
     # 6. Build and run Docker container on server
     - name: Build and run Docker on server
@@ -43,7 +43,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           cd /var/www/laravel
-          echo "🚀 Building Docker image..."
+          echo "Building Docker image..."
           docker build -t laravel-app .
           echo "Stopping old container if exists..."
           docker rm -f laravel || true
