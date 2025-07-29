@@ -9,30 +9,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout the repository
+    # 1. Checkout code from GitHub
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2. Set up SSH with your private key
+    # 2. Set up SSH agent
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.9.0
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    # 3. Add your server's fingerprint to known_hosts
+    # 3. Add server fingerprint to known hosts
     - name: Add server to known hosts
       run: |
         mkdir -p ~/.ssh
         ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-    # 4. Test SSH connection (optional but recommended)
-    - name: Test SSH connection
-      run: ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} "echo SSH connected!"
+    # 4. Create target directory on server
+    - name: Create target directory
+      run: ssh ubuntu@${{ secrets.SERVER_IP }} "sudo mkdir -p /var/www/html && sudo chown -R ubuntu:ubuntu /var/www/html"
 
-    # 5. Copy project files from GitHub runner to your server
+    # 5. Copy all project files to server
     - name: Copy project files to server
       run: |
-        rsync -avz --exclude '.git' --exclude 'node_modules' ./ ubuntu@${{ secrets.SERVER_IP }}:/var/www/html
+        rsync -avz --delete --exclude '.git' --exclude 'node_modules' ./ ubuntu@${{ secrets.SERVER_IP }}:/var/www/html
 
     # 6. Build and run Docker container on server
     - name: Build and run Docker on server
@@ -42,7 +42,7 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          cd /var/www/laravel
+          cd /var/www/html
           echo "Building Docker image..."
           docker build -t laravel-app .
           echo "Stopping old container if exists..."
