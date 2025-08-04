@@ -19,25 +19,26 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}   # e.g., 'ubuntu'
+          username: ${{ secrets.SERVER_USER }}   # usually 'ubuntu'
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            echo "✅ SSH access successful."
+            echo "SSH access successful."
             cd /var/www/html
 
-            echo "📥 Pulling latest code from Git..."
+            echo " Pulling latest code from Git..."
             git pull origin main
 
-            echo "🐘 Building Docker image..."
+            echo "Building Docker image..."
             docker build . -t laravel-app:v${BUILD_NUMBER}
 
-            echo "🔧 Updating docker-compose.yml..."
+            echo "Updating docker-compose.yml..."
             sed -i 's|laravel-app:.*|laravel-app:v${BUILD_NUMBER}|g' docker-compose.yml
 
-            echo "🧼 Stopping old containers..."
+            echo "Stopping old containers..."
             docker-compose down
 
-            echo "🚀 Starting new containers..."
+            echo "Starting new containers..."
             docker-compose up -d --build
 
-            echo "🎉 Deployment complete."
+            echo "Deployment complete."
+
