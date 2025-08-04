@@ -25,10 +25,14 @@ jobs:
             echo "✅ SSH access successful."
             cd /var/www/html
             git pull origin main
+            rm -f public/README.md
+            ln -s ../README.md public/README.md
             docker build . -t laravel-app:v${{ github.run_number }}
             sed -i 's|laravel-app:.*|laravel-app:v${{ github.run_number }}|g' docker-compose.yml
             docker-compose down
             docker-compose up -d --build
+         
+
 
          
 
