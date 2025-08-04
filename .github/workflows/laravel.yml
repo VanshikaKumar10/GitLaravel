@@ -20,7 +20,7 @@ jobs:
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}   # usually 'ubuntu'
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          key: ${{ secrets.SERVER_PRIVATE_KEY }}
           script: |
             echo "SSH access successful."
             cd /var/www/html
