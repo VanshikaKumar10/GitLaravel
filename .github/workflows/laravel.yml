@@ -2,30 +2,53 @@ name: Laravel Docker CI/CD
 
 on:
   push:
-    branches:
-      - dev
+    branches: [ "main" ]
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-    env:
-      BUILD_NUMBER: ${{ github.run_number }}
-
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    # 1. Checkout repo to runner (for access to secrets, etc.)
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Deploy via SSH to server
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}   # should be 'ubuntu'
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            echo " SSH access successful."
-            cd /var/www/html
-            git pull origin dev
-            docker build . -t laravel-app
-            docker-compose down
-            docker-compose up -d
+    # 2. Set up SSH agent
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    # 3. Add server fingerprint
+    - name: Add server to known hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+    # 4. Connect and deploy on server
+    - name: Pull latest code and redeploy Docker
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ubuntu
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /var/www/html
+
+          # If the repo doesn't exist, clone it
+          if [ ! -d ".git" ]; then
+            git clone https://github.com/${{ github.repository }} . 
+          else
+            git pull origin main
+          fi
+
+          echo "✅ Pulled latest code."
+
+          echo "🛠️ Building Docker image..."
+          docker build -t laravel-app .
+
+          echo "🧹 Stopping old container..."
+          docker rm -f laravel || true
+
+          echo "🚀 Running new container..."
+          docker run -d -p 80:80 --name laravel laravel-app
