@@ -26,7 +26,7 @@ WORKDIR /var/www/html
 # Copy Laravel project (from src folder)
 COPY src/ /var/www/html
 
-COPY README.md /var/www/html/README.md
+COPY README.md /var/www/html
 
 # Update Apache DocumentRoot to /public
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
